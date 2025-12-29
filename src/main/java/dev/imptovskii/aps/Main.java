@@ -48,7 +48,7 @@ public final class Main extends JavaPlugin {
     
     private void registerPacketListenerForSupportedVersions() {
         try {
-            String mcVersion = Bukkit.getMinecraftVersion();
+            String mcVersion = getMinecraftVersion();
             List<String> supportedVersions = Arrays.asList("1.13", "1.14", "1.15", "1.16", "1.17", "1.18", "1.19", "1.20", "1.21");
             
             if (supportedVersions.stream().anyMatch(mcVersion::startsWith)) {
@@ -59,6 +59,36 @@ public final class Main extends JavaPlugin {
         } catch (Exception e) {
             getLogger().log(Level.WARNING, "Could not register packet listener: ", e);
         }
+    }
+    
+    /**
+     * Получает версию Minecraft, совместимую со старыми версиями Bukkit API
+     */
+    private String getMinecraftVersion() {
+        // Современный способ (для новых версий Paper)
+        try {
+            java.lang.reflect.Method method = Bukkit.class.getMethod("getMinecraftVersion");
+            return (String) method.invoke(null);
+        } catch (Exception ignored) {
+            // Если метод не найден, используем старый способ
+        }
+        
+        // Старый способ для всех версий Bukkit/Spigot/Paper
+        String version = Bukkit.getServer().getClass().getPackage().getName();
+        version = version.substring(version.lastIndexOf('.') + 1);
+        
+        // Приводим к формату "1.XX"
+        if (version.startsWith("v1_")) {
+            version = version.replace("v1_", "1.");
+            version = version.replace("_", ".");
+        }
+        
+        // Обрезаем дополнительную информацию
+        if (version.contains("_")) {
+            version = version.substring(0, version.indexOf('_'));
+        }
+        
+        return version;
     }
     
     @Override
